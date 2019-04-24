@@ -1,0 +1,4 @@
+.idea/
+__pycache__/
+sources_file.csv
+venv/
