@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from analysis import simple_left_right_bias, data_table, simple_left_right_bias_percent
+from analysis import simple_left_right_bias, data_table, simple_left_right_bias_percent, compare_to_adfontesmedia
 from scraping import get_pages, scrape_sources, store_sources, load_sources
 
 if __name__ == '__main__':
@@ -15,8 +15,12 @@ if __name__ == '__main__':
     biases = simple_left_right_bias(sources)
     for k, v in biases.items():
         print(k, v)
+
     print('\nPercents:')
     biases = simple_left_right_bias_percent(sources)
     for k, v in biases.items():
         print(k, v)
-    data_table(sources)
+
+    # data_table(sources)
+    print('\nAd Fontes Media:')
+    compare_to_adfontesmedia(sources)

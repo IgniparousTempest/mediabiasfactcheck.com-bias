@@ -1,13 +1,17 @@
 import csv
 import warnings
 from typing import List, Tuple
+from urllib import request
 
+import cv2
+import numpy as np
 from requests import get
 from requests.exceptions import HTTPError
 from contextlib import closing
 from bs4 import BeautifulSoup
 
 from common import Source, BrokenSource, Factual
+from image_processing import analyse_left_right_image
 
 
 class NotANewsSourceError(Exception):
@@ -132,8 +136,10 @@ def scrape_source(url: str) -> Source:
     except Exception as e:
         raise NotANewsSourceError(f'Could not find factual information on "{source_name}" with url "{url}"')
 
-    print(f'Scraping {url} with name "{source_name}" and img "{image_url}"')
-    return Source(name=source_name, img_url=image_url, page_url=url, factual=factual)
+    bias = analyse_left_right_image(left_right_image_from_url(url))
+
+    print(f'Scraping {url} with name "{source_name}", img "{image_url}", and bias {bias}')
+    return Source(name=source_name, img_url=image_url, page_url=url, factual=factual, bias=bias)
 
 
 def store_sources(sources: List[Source], file_name='sources_file.csv'):
@@ -141,7 +147,7 @@ def store_sources(sources: List[Source], file_name='sources_file.csv'):
         writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         for source in sources:
-            writer.writerow([source.name, source.page_url, source.img_url, source.factual])
+            writer.writerow([source.name, source.page_url, source.img_url, source.factual, source.bias])
 
 
 def load_sources(file_name='sources_file.csv') -> List[Source]:
@@ -149,5 +155,14 @@ def load_sources(file_name='sources_file.csv') -> List[Source]:
     with open(file_name) as f:
         reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in reader:
-            sources.append(Source(name=row[0], img_url=row[2], page_url=row[1], factual=Factual[row[3].split('.')[1]]))
+            sources.append(Source(name=row[0], img_url=row[2], page_url=row[1], factual=Factual[row[3].split('.')[1]], bias=int(row[4])))
     return sources
+
+
+def left_right_image_from_url(url: str) -> np.ndarray:
+    req = request.urlopen(url)
+    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+    img = cv2.imdecode(arr, -1)  # 'Load it as it is'
+
+    # return the image
+    return img

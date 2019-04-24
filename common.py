@@ -14,9 +14,17 @@ class Source(object):
     page_url: str
     img_url: str
     factual: Factual
+    bias: int
 
 
 @dataclass
 class BrokenSource(object):
     page_url: str
     error_message: str
+
+
+@dataclass
+class AdFontesMediaSource(object):
+    name: str
+    vertical_rank: int
+    horizontal_rank: int
